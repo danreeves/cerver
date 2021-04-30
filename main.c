@@ -10,9 +10,9 @@ const int PORT = 8080;
 const int MAX_CONNS = 1024;
 
 void now(char * time_s) {
-    time_t now = time(NULL);
-    struct tm * p = localtime(&now);
-    strftime(time_s, 1000, "%H:%M:%S %a %d %b %Z", p);
+  time_t now = time(NULL);
+  struct tm * p = localtime(&now);
+  strftime(time_s, 1000, "%H:%M:%S %a %d %b %Z", p);
 }
 
 int main() {
@@ -47,7 +47,7 @@ int main() {
         sock,
         (struct sockaddr *)&address,
         (socklen_t*)&addrlen
-    );
+        );
 
     if (connection < 0) {
       printf("Failed to accept connection...\n");
@@ -72,12 +72,66 @@ int main() {
       printf("No bytes to read in buffer\n");
     }
 
-    char *response = "HTTP/1.1 200 OK\n"
-                  "Permissions-Policy: interest-cohort=()"
-                  "Content-Type: text/plain\n"
-                  "Content-Length: 14\n"
-                  "\n"
-                  "Hello, planet!";
+    char * content = 0;
+    char * content_type = "Content-Type: text/text\n";
+
+    if (strcmp(path, "/") == 0) {
+      path = "/index.html";
+    }
+
+    if (strstr(path, ".html") != NULL) {
+      content_type = "Content-Type: text/html\n";
+    }
+
+    if (strstr(path, ".css") != NULL) {
+      content_type = "Content-Type: text/css\n";
+    }
+
+    int found = 0;
+    char filepath [9 + strlen(path)];
+    snprintf(filepath, 9 + strlen(path), "./public%s", path);
+    FILE * file = fopen(filepath, "r");
+    if (!file) {
+      content = "file not found";
+    } else {
+      fseek(file, 0, SEEK_END);
+      long length = ftell(file);
+      fseek(file, 0, SEEK_SET);
+      content = malloc(length);
+      if (content) {
+        found = 1;
+        fread(content, 1, length, file);
+      } else {
+        content = "file not found";
+      }
+    }
+
+    int content_length = strlen(content);
+
+    char * response_header = 0;
+    if (found == 1) {
+      response_header = "HTTP/1.1 200 OK\n";
+    } else {
+      response_header = "HTTP/1.1 404 Not Found\n";
+    }
+    char * go_away_google = "Permissions-Policy: interest-cohort=()\n";
+
+    char response_content_length [128];
+    snprintf(response_content_length, 128, "Content-Length: %d", content_length);
+
+    int buffer_size = 128 + strlen(response_header) + content_length;
+    char response [buffer_size];
+
+    snprintf(
+        response,
+        buffer_size,
+        "%s%s%s%s\n\n%s",
+        response_header,
+        content_type,
+        response_content_length,
+        go_away_google,
+        content
+        );
 
     write(connection, response, strlen(response));
 
