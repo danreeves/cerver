@@ -1,1 +1,5 @@
+Learning c by writing a simple web server.
+
+Should compile with any c compiler. e.g:
+
 tcc -run main.c
