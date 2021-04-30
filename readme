@@ -1,0 +1,1 @@
+tcc -run main.c
