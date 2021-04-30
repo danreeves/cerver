@@ -8,6 +8,7 @@
 
 const int PORT = 8080;
 const int MAX_CONNS = 1024;
+const int PROCS = 10;
 
 void now(char * time_s) {
   time_t now = time(NULL);
@@ -40,6 +41,11 @@ int main() {
   if (listen(sock, MAX_CONNS) < 0) {
     printf("Failed to listen to socket...\n");
     return 0;
+  }
+
+  for (int p = 0; p < PROCS; p++) {
+    int pid = fork();
+    if (pid == 0) break;
   }
 
   while(1) {
@@ -85,6 +91,10 @@ int main() {
 
     if (strstr(path, ".css") != NULL) {
       content_type = "Content-Type: text/css\n";
+    }
+
+    if (strstr(path, ".js") != NULL) {
+      content_type = "Content-Type: text/javascript\n";
     }
 
     int found = 0;
