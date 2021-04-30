@@ -100,7 +100,8 @@ int main() {
       content = malloc(length);
       if (content) {
         found = 1;
-        fread(content, 1, length, file);
+        int n = fread(content, sizeof(char), length, file);
+        content[n] = '\0';
       } else {
         content = "file not found";
       }
@@ -117,7 +118,7 @@ int main() {
     char * go_away_google = "Permissions-Policy: interest-cohort=()\n";
 
     char response_content_length [128];
-    snprintf(response_content_length, 128, "Content-Length: %d", content_length);
+    snprintf(response_content_length, 128, "Content-Length: %d\n", content_length);
 
     int buffer_size = 128 + strlen(response_header) + content_length;
     char response [buffer_size];
